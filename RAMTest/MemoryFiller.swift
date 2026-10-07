@@ -5,27 +5,26 @@ final class MemoryFiller: ObservableObject {
     @Published private(set) var filledBytes: UInt64 = 0
     @Published private(set) var lastCrashBytes: UInt64 = 0
     @Published private(set) var isRunning = false
-    @Published private(set) var lastSavedAt: Date?
+    @Published var showLastResult = false
 
     private var chunks: [UnsafeMutableRawPointer] = []
-    private var chunkSizes: [Int] = []
+    private var totalBytes: UInt64 = 0
     private let queue = DispatchQueue(label: "pl.ramtest.filler", qos: .userInitiated)
-    private var persistTimer: Timer?
     private var runningFlag = false
     private let persistURL: URL
+    private var persistHandle: FileHandle?
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        persistURL = docs.appendingPathComponent("ram_progress.json")
-        if let snapshot = Self.load(from: persistURL) {
-            lastCrashBytes = snapshot.bytes
-            filledBytes = snapshot.bytes
-            lastSavedAt = snapshot.updatedAt
-        }
+        persistURL = docs.appendingPathComponent("ram_progress.bin")
+        let saved = Self.load(from: persistURL)
+        lastCrashBytes = saved
+        filledBytes = saved
+        showLastResult = saved > 0
     }
 
     deinit {
-        persistTimer?.invalidate()
+        try? persistHandle?.close()
         freeAll()
     }
 
@@ -33,15 +32,14 @@ final class MemoryFiller: ObservableObject {
         queue.async { [weak self] in
             guard let self, !self.runningFlag else { return }
             self.runningFlag = true
+            self.totalBytes = 0
+            self.openPersistHandle()
+            self.persist(0)
             DispatchQueue.main.async {
                 self.filledBytes = 0
                 self.isRunning = true
             }
             self.fillLoop()
-        }
-
-        DispatchQueue.main.async { [weak self] in
-            self?.startPersistTimer()
         }
     }
 
@@ -67,37 +65,37 @@ final class MemoryFiller: ObservableObject {
         guard let pointer = malloc(bytes) else { return false }
         memset(pointer, 0xA5, bytes)
         chunks.append(pointer)
-        chunkSizes.append(bytes)
-        let total = chunks.enumerated().reduce(UInt64(0)) { sum, item in
-            sum + UInt64(chunkSizes[item.offset])
-        }
+        totalBytes += UInt64(bytes)
+        persist(totalBytes)
+        let total = totalBytes
         DispatchQueue.main.async { [weak self] in
             self?.filledBytes = total
         }
         return true
     }
 
-    private func startPersistTimer() {
-        persistTimer?.invalidate()
-        persistNow()
-        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.persistNow()
+    private func openPersistHandle() {
+        try? persistHandle?.close()
+        persistHandle = nil
+        if !FileManager.default.fileExists(atPath: persistURL.path) {
+            FileManager.default.createFile(atPath: persistURL.path, contents: Data(count: 8))
         }
-        RunLoop.main.add(timer, forMode: .common)
-        persistTimer = timer
+        persistHandle = try? FileHandle(forWritingTo: persistURL)
     }
 
-    private func persistNow() {
-        let snapshot = ProgressSnapshot(bytes: filledBytes, updatedAt: Date())
+    private func persist(_ bytes: UInt64) {
+        var value = bytes.littleEndian
+        let data = withUnsafeBytes(of: &value) { Data($0) }
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(snapshot)
-            try data.write(to: persistURL, options: .atomic)
-            lastSavedAt = snapshot.updatedAt
+            if let handle = persistHandle {
+                try handle.seek(toOffset: 0)
+                try handle.write(contentsOf: data)
+                try handle.synchronize()
+            } else {
+                try data.write(to: persistURL, options: .atomic)
+            }
         } catch {
-            // Keep filling even if a single write fails.
+            try? data.write(to: persistURL, options: .atomic)
         }
     }
 
@@ -106,18 +104,12 @@ final class MemoryFiller: ObservableObject {
             free(pointer)
         }
         chunks.removeAll()
-        chunkSizes.removeAll()
     }
 
-    private static func load(from url: URL) -> ProgressSnapshot? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try? decoder.decode(ProgressSnapshot.self, from: data)
+    private static func load(from url: URL) -> UInt64 {
+        guard let data = try? Data(contentsOf: url), data.count >= 8 else { return 0 }
+        return data.prefix(8).withUnsafeBytes { raw in
+            UInt64(littleEndian: raw.load(as: UInt64.self))
+        }
     }
-}
-
-private struct ProgressSnapshot: Codable {
-    var bytes: UInt64
-    var updatedAt: Date
 }

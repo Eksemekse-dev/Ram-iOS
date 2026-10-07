@@ -1,18 +1,18 @@
 # RAM Test
 
-Aplikacja iOS do testowania, ile pamięci RAM uda się zająć zanim system ją wyłączy.
+iOS app that measures how much RAM it can fill before the system kills it.
 
-## Jak działa
+## How it works
 
-1. Zakładka **Test** pokazuje, ile RAM-u aplikacja już zapchała.
-2. Przycisk **Test** startuje ciągłe zapychanie pamięci.
-3. Postęp zapisuje się co 1 sekundę do pliku w katalogu Documents.
-4. Gdy iOS ubije aplikację po zapełnieniu RAM-u, po ponownym uruchomieniu widać ostatni zapisany wynik.
+1. The **Test** tab shows how much RAM the app has filled.
+2. The **Test** button starts filling memory and keeps going.
+3. Progress is written to disk as fast as possible so the last value survives a crash.
+4. After the app is killed and opened again, a popup shows how much RAM it managed to fill.
 
 ## IPA (GitHub Actions)
 
-Workflow `.github/workflows/build-ipa.yml` buduje niepodpisane IPA na `macos-14`.
+The `.github/workflows/build-ipa.yml` workflow builds an unsigned IPA on `macos-14`.
 
-Po pushu na `main` (albo ręcznie przez **Actions → Build IPA → Run workflow**) pobierz artefakt `RAMTest.ipa`.
+After a push to `main` (or **Actions → Build IPA → Run workflow**), download the `RAMTest.ipa` artifact.
 
-Niepodpisane IPA nie zainstaluje się na urządzeniu bez własnego podpisu (Apple Developer / AltStore / Sideloadly). Żeby podpisywać w CI, dodaj sekrety certyfikatu i profilu provisioning.
+An unsigned IPA will not install on a device until you sign it (Apple Developer, AltStore, Sideloadly). To sign in CI, add certificate and provisioning profile secrets.

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RootView: View {
+    @EnvironmentObject private var filler: MemoryFiller
+
     var body: some View {
         TabView {
             TestTabView()
@@ -10,8 +12,13 @@ struct RootView: View {
 
             ResultTabView()
                 .tabItem {
-                    Label("Wynik", systemImage: "chart.bar")
+                    Label("Result", systemImage: "chart.bar")
                 }
+        }
+        .alert("Last RAM result", isPresented: $filler.showLastResult) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The app filled \(formattedBytes(filler.lastCrashBytes)) before it was killed.")
         }
     }
 }
@@ -24,27 +31,19 @@ struct TestTabView: View {
             Spacer()
 
             VStack(spacing: 8) {
-                Text("Zapchane RAM")
+                Text("Filled RAM")
                     .font(.headline)
                     .foregroundStyle(.secondary)
-                Text(ByteCountFormatter.string(fromByteCount: Int64(clamping: filler.filledBytes), countStyle: .memory))
+                Text(formattedBytes(filler.filledBytes))
                     .font(.system(size: 40, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .multilineTextAlignment(.center)
             }
 
-            if filler.lastCrashBytes > 0 {
-                Text("Przed ostatnim wyłączeniem: \(ByteCountFormatter.string(fromByteCount: Int64(clamping: filler.lastCrashBytes), countStyle: .memory))")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-
             Button {
                 filler.startTest()
             } label: {
-                Text(filler.isRunning ? "Test działa…" : "Test")
+                Text(filler.isRunning ? "Test running…" : "Test")
                     .font(.title2.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
@@ -53,7 +52,7 @@ struct TestTabView: View {
             .disabled(filler.isRunning)
             .padding(.horizontal, 32)
 
-            Text("Przycisk zapycha pamięć aż system wyłączy aplikację. Postęp zapisuje się co 1 sekundę.")
+            Text("The Test button fills memory until the system kills the app.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -70,29 +69,23 @@ struct ResultTabView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Ostatni zapis")
+            Text("Last result")
                 .font(.title2.weight(.bold))
 
-            LabeledContent("RAM przed wyłączeniem") {
-                Text(filler.lastCrashBytes == 0
-                     ? "brak"
-                     : ByteCountFormatter.string(fromByteCount: Int64(clamping: filler.lastCrashBytes), countStyle: .memory))
+            LabeledContent("RAM before exit") {
+                Text(filler.lastCrashBytes == 0 ? "none" : formattedBytes(filler.lastCrashBytes))
             }
 
-            LabeledContent("Aktualnie zapchane") {
-                Text(ByteCountFormatter.string(fromByteCount: Int64(clamping: filler.filledBytes), countStyle: .memory))
-            }
-
-            LabeledContent("Ostatni zapis do pliku") {
-                if let date = filler.lastSavedAt {
-                    Text(date, style: .time)
-                } else {
-                    Text("jeszcze nie zapisano")
-                }
+            LabeledContent("Currently filled") {
+                Text(formattedBytes(filler.filledBytes))
             }
 
             Spacer()
         }
         .padding()
     }
+}
+
+func formattedBytes(_ bytes: UInt64) -> String {
+    ByteCountFormatter.string(fromByteCount: Int64(clamping: bytes), countStyle: .memory)
 }

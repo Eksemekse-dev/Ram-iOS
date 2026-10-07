@@ -96,11 +96,10 @@
 			};
 			buildConfigurationList = A70000000000000000000001 /* Build configuration list for PBXProject "RAMTest" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = pl;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				pl,
 				Base,
 			);
 			mainGroup = A40000000000000000000001;
