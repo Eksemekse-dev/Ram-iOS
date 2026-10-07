@@ -11,6 +11,7 @@
 		A10000000000000000000002 /* MemoryFiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* MemoryFiller.swift */; };
 		A10000000000000000000003 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* RootView.swift */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
+		A10000000000000000000005 /* DeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* DeviceInfo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,8 @@
 		A20000000000000000000003 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000005 /* RAMTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RAMTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000006 /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* RAMTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RAMTest.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +49,8 @@
 				A20000000000000000000001 /* RAMTestApp.swift */,
 				A20000000000000000000002 /* MemoryFiller.swift */,
 				A20000000000000000000003 /* RootView.swift */,
+				A20000000000000000000006 /* DeviceInfo.swift */,
+				A20000000000000000000007 /* RAMTest.entitlements */,
 				A20000000000000000000004 /* Assets.xcassets */,
 			);
 			path = RAMTest;
@@ -131,6 +136,7 @@
 				A10000000000000000000001 /* RAMTestApp.swift in Sources */,
 				A10000000000000000000002 /* MemoryFiller.swift in Sources */,
 				A10000000000000000000003 /* RootView.swift in Sources */,
+				A10000000000000000000005 /* DeviceInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -179,6 +185,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = RAMTest/RAMTest.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -210,6 +217,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = RAMTest/RAMTest.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";

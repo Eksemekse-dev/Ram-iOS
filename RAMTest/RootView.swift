@@ -66,23 +66,44 @@ struct TestTabView: View {
 
 struct ResultTabView: View {
     @EnvironmentObject private var filler: MemoryFiller
+    private let device = DeviceInfo.current
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Last result")
-                .font(.title2.weight(.bold))
+        NavigationStack {
+            List {
+                Section("Last result") {
+                    LabeledContent("RAM before exit") {
+                        Text(filler.lastCrashBytes == 0 ? "none" : formattedBytes(filler.lastCrashBytes))
+                    }
+                    LabeledContent("Currently filled") {
+                        Text(formattedBytes(filler.filledBytes))
+                    }
+                }
 
-            LabeledContent("RAM before exit") {
-                Text(filler.lastCrashBytes == 0 ? "none" : formattedBytes(filler.lastCrashBytes))
+                Section("Memory entitlement") {
+                    LabeledContent("Increased memory limit") {
+                        Text(device.hasIncreasedMemoryLimit ? "Yes" : "No")
+                            .foregroundStyle(device.hasIncreasedMemoryLimit ? .green : .secondary)
+                    }
+                }
+
+                Section("Device") {
+                    LabeledContent("iOS") {
+                        Text("\(device.iosName) \(device.iosVersion)")
+                    }
+                    LabeledContent("Device") {
+                        Text(device.deviceName)
+                    }
+                    LabeledContent("Model") {
+                        Text(device.deviceIdentifier)
+                    }
+                    LabeledContent("Processor") {
+                        Text(device.processor)
+                    }
+                }
             }
-
-            LabeledContent("Currently filled") {
-                Text(formattedBytes(filler.filledBytes))
-            }
-
-            Spacer()
+            .navigationTitle("Result")
         }
-        .padding()
     }
 }
 
