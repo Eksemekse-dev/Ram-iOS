@@ -13,12 +13,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Select Xcode Version
+        run: |
+          # Wybór dostępnej wersji Xcode z systemu runnera
+          XCODE_PATH=$(ls -d /Applications/Xcode_15*.app /Applications/Xcode_16*.app 2>/dev/null | tail -n 1)
+          if [ -n "$XCODE_PATH" ]; then
+            echo "Używam Xcode z: $XCODE_PATH"
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          else
+            echo "Używam domyślnego Xcode"
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          fi
+          xcodebuild -version
 
       - name: Build unsigned iOS app
         run: |
           xcodebuild \
+            clean build \
             -project RAMTest.xcodeproj \
             -scheme RAMTest \
             -configuration Release \
@@ -27,14 +38,13 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            build
+            CODE_SIGN_IDENTITY=""
 
       - name: Package IPA
         run: |
           APP_PATH=$(find build/Build/Products -name "RAMTest.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "RAMTest.app not found"
+            echo "RAMTest.app nie został znaleziony"
             find build -name "*.app" -o -name "*.ipa"
             exit 1
           fi
